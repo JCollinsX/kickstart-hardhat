@@ -5,11 +5,11 @@ contract CampaignFactory {
     address[] public deployedCampaigns;
 
     function createCampaign(uint minimum) public {
-        address newCampaign = new Campaign(minimum, msg.sender);
-        deployedCampaigns.push(newCampaign);
+        Campaign newCampaign = new Campaign(minimum, msg.sender);
+        deployedCampaigns.push(address(newCampaign));
     }
 
-    function getDeployedCampaigns() public view returns (address[]) {
+    function getDeployedCampaigns() public view returns (address[] memory) {
         return deployedCampaigns;
     }
 }
@@ -24,7 +24,9 @@ contract Campaign {
         mapping(address => bool) approvals;
     }
 
-    Request[] public requests;
+    uint numRequests;
+    mapping (uint => Request) requests;
+
     address public manager;
     uint public minimumContribution;
     mapping(address => bool) public approvers;
@@ -35,7 +37,7 @@ contract Campaign {
         _;
     }
 
-    function Campaign(uint minimum, address creator) public {
+    constructor (uint minimum, address creator) {
         manager = creator;
         minimumContribution = minimum;
     }
@@ -47,16 +49,13 @@ contract Campaign {
         approversCount++;
     }
 
-    function createRequest(string description, uint value, address recipient) public restricted {
-        Request memory newRequest = Request({
-        description: description,
-        value: value,
-        recipient: recipient,
-        complete: false,
-        approvalCount: 0
-        });
-
-        requests.push(newRequest);
+    function createRequest(string memory description, uint value, address recipient) public restricted {
+        Request storage newRequest = requests[numRequests++];
+        newRequest.description = description;
+        newRequest.value = value;
+        newRequest.recipient = recipient;
+        newRequest.complete = false;
+        newRequest.approvalCount= 0;
     }
 
     function approveRequest(uint index) public {
@@ -75,7 +74,7 @@ contract Campaign {
         require(request.approvalCount > (approversCount / 2));
         require(!request.complete);
 
-        request.recipient.transfer(request.value);
+        payable(request.recipient).transfer(request.value);
         request.complete = true;
     }
 
@@ -84,14 +83,14 @@ contract Campaign {
     ) {
         return (
         minimumContribution,
-        this.balance,
-        requests.length,
+        address(this).balance,
+        numRequests,
         approversCount,
         manager
         );
     }
 
     function getRequestsCount() public view returns (uint) {
-        return requests.length;
+        return numRequests;
     }
 }

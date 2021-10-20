@@ -21,7 +21,6 @@ async function main() {
 
     console.log("CAMPAIGNFACTORY deployed to:", campaignFactory.address);
 
-
     const Campaign = await hre.ethers.getContractFactory("Campaign");
     const campaign = await Campaign.deploy();
 
