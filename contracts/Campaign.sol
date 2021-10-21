@@ -25,7 +25,7 @@ contract Campaign {
     }
 
     uint numRequests;
-    mapping (uint => Request) requests;
+    mapping (uint => Request) public requests;
 
     address public manager;
     uint public minimumContribution;
